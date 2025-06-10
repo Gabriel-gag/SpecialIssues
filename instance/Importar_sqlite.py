@@ -118,15 +118,23 @@ def importar_planilha(info, nome):
             link = row['link']
             prazo = row['detalhes']
             detalhes = row['prazo']
+        #validação de data, aceita após 2023
+        termos_validos = ['submissions due: various', 'submissions due: ongoing', 'prazo não informado', 'prazo não claramente definido','prazo não encontrado na descrição inicial']
+        prazo_lower = str(prazo).lower()
 
+        aceita_insercao = (
+            any(p in prazo_lower for p in termos_validos) or
+            any(ano in prazo_lower for ano in ['2024', '2025', '2026'])
+        )
+        if aceita_insercao:
         # Inserir dados no banco de dados, tratando duplicatas
-        try:
-            cursor.execute(''' 
-                INSERT OR IGNORE INTO spi (editora, revista, titulo, link, prazo, datanot, detalhes) 
-                VALUES (?, ?, ?, ?, ?, ?, ?) 
-            ''', (editora, revista, titulo, link, prazo, datanot, detalhes))
-        except sqlite3.IntegrityError as e:
-            print(f"Erro ao inserir '{titulo}': {e}")
+            try:
+                cursor.execute(''' 
+                    INSERT OR IGNORE INTO spi (editora, revista, titulo, link, prazo, datanot, detalhes) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?) 
+                ''', (editora, revista, titulo, link, prazo, datanot, detalhes))
+            except sqlite3.IntegrityError as e:
+                print(f"Erro ao inserir '{titulo}': {e}")
 
 # Importar cada planilha
 for nome, info in planilhas.items():
